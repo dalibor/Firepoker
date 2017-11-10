@@ -197,6 +197,22 @@ angular.module('firePokerApp')
       $scope.game.estimate.results.push({points:points, user:$scope.fp.user});
     };
 
+    // Show checkmarks when participant has voted
+    $scope.setShowCheckmarks = function() {
+      if ($scope.game.estimate && $scope.game.estimate.results) {
+        angular.forEach($scope.game.estimate.results, function(result) {
+          if (
+            result &&
+            result.user &&
+            result.user.id &&
+            result.user.id === $scope.fp.user.id
+          ) {
+            $scope.game.participants[result.user.id].hasVoted = true;
+          }
+        });
+      }
+    };
+
     // Set full name
     $scope.setFullname = function() {
       $cookieStore.put('fp', $scope.fp);
@@ -232,6 +248,8 @@ angular.module('firePokerApp')
       return totalOfOnlineParticipants;
     };
 
+    //
+
     // Accept
     $scope.acceptRound = function() {
       $scope.game.estimate.points = $scope.newEstimate.points;
@@ -239,12 +257,18 @@ angular.module('firePokerApp')
       $scope.game.estimate.status = 'closed';
       $scope.game.stories[$scope.game.estimate.id] = angular.copy($scope.game.estimate);
       $scope.game.estimate = false;
+      angular.forEach($scope.game.participants, function(participant) {
+        participant.hasVoted = false;
+      });
     };
 
     // Play again
     $scope.playAgain = function() {
       $scope.game.estimate.results = [];
       $scope.game.estimate.status = 'active';
+      angular.forEach($scope.game.participants, function(participant) {
+        participant.hasVoted = false;
+      });
     };
 
     // Cancel round
@@ -255,6 +279,9 @@ angular.module('firePokerApp')
         $scope.game.stories[idx].endedAt = false;
         $scope.game.stories[idx].status = 'queue';
         $scope.game.estimate = false;
+        angular.forEach($scope.game.participants, function(participant) {
+          participant.hasVoted = false;
+        });
       }
     };
 
@@ -352,11 +379,6 @@ angular.module('firePokerApp')
       $location.replace();
     };
 
-    // Wait 1 sec before show social buttons
-    $timeout(function() {
-      $scope.showSocialButtons = true;
-    }, 1000);
-
     // Redirect with a GID to create new games
     $scope.redirectToCreateNewGame();
 
@@ -376,6 +398,7 @@ angular.module('firePokerApp')
       }
       $scope.setShowCardDeck();
       $scope.setShowSelectEstimate();
+      $scope.setShowCheckmarks();
       $scope.setNewEstimate();
       $scope.setDisablePlayAgainAndRevealButtons();
       $scope.setShowCards();
